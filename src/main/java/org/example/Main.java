@@ -38,7 +38,6 @@ public class Main {
 
         try {
             System.out.println("Анализ JAR файла: " + jarFilePath);
-            System.out.println();
 
             JarMetricsAnalyzer analyzer = new JarMetricsAnalyzer();
             Metrics metrics = analyzer.analyze(jarFilePath);
