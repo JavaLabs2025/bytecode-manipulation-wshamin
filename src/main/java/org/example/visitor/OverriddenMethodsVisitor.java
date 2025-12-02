@@ -14,9 +14,6 @@ import java.util.Set;
 
 import static org.objectweb.asm.Opcodes.ASM9;
 
-/**
- * Visitor для подсчета переопределенных методов в классе.
- */
 public class OverriddenMethodsVisitor extends ClassVisitor {
     private final ClassInfo classInfo;
     private final Map<String, ClassInfo> classInfoMap;
@@ -32,11 +29,9 @@ public class OverriddenMethodsVisitor extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
             String[] exceptions) {
-        // Пропускаем конструкторы и статические инициализаторы
         if (!name.equals("<init>") && !name.equals("<clinit>")) {
             String methodSignature = name + descriptor;
 
-            // Проверяем, переопределяет ли этот метод метод суперкласса
             if (isMethodOverridden(methodSignature, classInfo.getSuperName())) {
                 overriddenMethodsCount++;
             }
@@ -45,47 +40,31 @@ public class OverriddenMethodsVisitor extends ClassVisitor {
         return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
-    /**
-     * Проверяет, переопределяет ли метод с заданной сигнатурой метод из
-     * суперкласса.
-     * 
-     * @param methodSignature сигнатура метода (имя + дескриптор)
-     * @param superClassName  имя суперкласса
-     * @return true, если метод переопределяет метод суперкласса
-     */
     private boolean isMethodOverridden(String methodSignature, String superClassName) {
         if (superClassName == null || superClassName.equals("java/lang/Object")) {
-            // Для Object проверяем только стандартные методы
             return isObjectMethod(methodSignature);
         }
 
-        // Ищем суперкласс в нашем JAR
         ClassInfo superClassInfo = classInfoMap.get(superClassName);
 
         if (superClassInfo != null) {
-            // Проверяем методы суперкласса из нашего JAR
+
             Set<String> superMethodSignatures = getSuperClassMethodSignatures(superClassInfo);
             if (superMethodSignatures.contains(methodSignature)) {
                 return true;
             }
 
-            // Рекурсивно проверяем родителя суперкласса
             return isMethodOverridden(methodSignature, superClassInfo.getSuperName());
         } else {
-            // Пытаемся загрузить класс через ClassLoader
             try {
                 Set<String> externalSuperMethods = getExternalClassMethods(superClassName);
                 return externalSuperMethods.contains(methodSignature);
             } catch (Exception e) {
-                // Не удалось загрузить класс, пропускаем
                 return false;
             }
         }
     }
 
-    /**
-     * Проверяет, является ли метод одним из стандартных методов Object.
-     */
     private boolean isObjectMethod(String methodSignature) {
         return methodSignature.equals("toString()Ljava/lang/String;") ||
                 methodSignature.equals("equals(Ljava/lang/Object;)Z") ||
@@ -94,9 +73,6 @@ public class OverriddenMethodsVisitor extends ClassVisitor {
                 methodSignature.equals("finalize()V");
     }
 
-    /**
-     * Получает сигнатуры всех методов суперкласса из нашего JAR.
-     */
     private Set<String> getSuperClassMethodSignatures(ClassInfo superClassInfo) {
         Set<String> signatures = new HashSet<>();
         for (MethodInfo method : superClassInfo.getMethods()) {
@@ -105,13 +81,9 @@ public class OverriddenMethodsVisitor extends ClassVisitor {
         return signatures;
     }
 
-    /**
-     * Получает сигнатуры методов внешнего класса через ClassReader.
-     */
     private Set<String> getExternalClassMethods(String className) throws IOException {
         Set<String> methodSignatures = new HashSet<>();
 
-        // Пытаемся загрузить класс как ресурс
         String resourceName = className + ".class";
         InputStream classStream = ClassLoader.getSystemResourceAsStream(resourceName);
 
@@ -136,9 +108,6 @@ public class OverriddenMethodsVisitor extends ClassVisitor {
         return methodSignatures;
     }
 
-    /**
-     * Возвращает количество переопределенных методов.
-     */
     public int getOverriddenMethodsCount() {
         return overriddenMethodsCount;
     }

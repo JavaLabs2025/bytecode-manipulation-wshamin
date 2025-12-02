@@ -7,11 +7,6 @@ import org.objectweb.asm.MethodVisitor;
 
 import static org.objectweb.asm.Opcodes.*;
 
-/**
- * Visitor для подсчета ABC метрики (количество присваиваний в локальные
- * переменные).
- * Делегирует работу внутреннему AbcMethodVisitor для каждого метода.
- */
 public class AbcMetricVisitor extends ClassVisitor {
     private final ClassInfo classInfo;
 
@@ -30,9 +25,6 @@ public class AbcMetricVisitor extends ClassVisitor {
         return new AbcMethodVisitor(mv, methodInfo);
     }
 
-    /**
-     * Внутренний MethodVisitor для отслеживания инструкций присваивания в метод.
-     */
     private static class AbcMethodVisitor extends MethodVisitor {
         private final MethodInfo methodInfo;
 
@@ -43,8 +35,6 @@ public class AbcMetricVisitor extends ClassVisitor {
 
         @Override
         public void visitVarInsn(int opcode, int var) {
-            // Отслеживаем инструкции присваивания в локальные переменные
-            // ISTORE, LSTORE, FSTORE, DSTORE, ASTORE
             if (opcode == ISTORE || opcode == LSTORE || opcode == FSTORE ||
                     opcode == DSTORE || opcode == ASTORE) {
                 methodInfo.incrementAssignmentCount();

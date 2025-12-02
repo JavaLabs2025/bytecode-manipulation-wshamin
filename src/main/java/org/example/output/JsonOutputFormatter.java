@@ -18,16 +18,11 @@ public class JsonOutputFormatter {
         public String toJson(Metrics metrics) {
                 StringBuilder json = new StringBuilder();
                 json.append("{\n");
-                json.append(String.format("  \"maxInheritanceDepth\": %d,\n",
-                                metrics.getMaxInheritanceDepth()));
-                json.append(String.format("  \"avgInheritanceDepth\": %.2f,\n",
-                                metrics.getAvgInheritanceDepth()));
-                json.append(String.format("  \"totalAbcMetric\": %d,\n",
-                                metrics.getTotalAbcMetric()));
-                json.append(String.format("  \"avgOverriddenMethods\": %.2f,\n",
-                                metrics.getAvgOverriddenMethods()));
-                json.append(String.format("  \"avgFieldsPerClass\": %.2f\n",
-                                metrics.getAvgFieldsPerClass()));
+                json.append("  \"maxInheritanceDepth\": ").append(metrics.getMaxInheritanceDepth()).append(",\n");
+                json.append("  \"avgInheritanceDepth\": ").append(metrics.getAvgInheritanceDepth()).append(",\n");
+                json.append("  \"totalAbcMetric\": ").append(metrics.getTotalAbcMetric()).append(",\n");
+                json.append("  \"avgOverriddenMethods\": ").append(metrics.getAvgOverriddenMethods()).append(",\n");
+                json.append("  \"avgFieldsPerClass\": ").append(metrics.getAvgFieldsPerClass()).append("\n");
                 json.append("}");
 
                 return json.toString();
