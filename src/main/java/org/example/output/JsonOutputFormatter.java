@@ -4,6 +4,7 @@ import org.example.model.Metrics;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Locale;
 
 public class JsonOutputFormatter {
 
@@ -18,15 +19,15 @@ public class JsonOutputFormatter {
         public String toJson(Metrics metrics) {
                 StringBuilder json = new StringBuilder();
                 json.append("{\n");
-                json.append(String.format("  \"maxInheritanceDepth\": %d,\n",
+                json.append(String.format(Locale.US, "  \"maxInheritanceDepth\": %d,\n",
                                 metrics.getMaxInheritanceDepth()));
-                json.append(String.format("  \"avgInheritanceDepth\": %.2f,\n",
+                json.append(String.format(Locale.US, "  \"avgInheritanceDepth\": %.2f,\n",
                                 metrics.getAvgInheritanceDepth()));
-                json.append(String.format("  \"totalAbcMetric\": %d,\n",
+                json.append(String.format(Locale.US, "  \"totalAbcMetric\": %d,\n",
                                 metrics.getTotalAbcMetric()));
-                json.append(String.format("  \"avgOverriddenMethods\": %.2f,\n",
+                json.append(String.format(Locale.US, "  \"avgOverriddenMethods\": %.2f,\n",
                                 metrics.getAvgOverriddenMethods()));
-                json.append(String.format("  \"avgFieldsPerClass\": %.2f\n",
+                json.append(String.format(Locale.US, "  \"avgFieldsPerClass\": %.2f\n",
                                 metrics.getAvgFieldsPerClass()));
                 json.append("}");
 
