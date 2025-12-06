@@ -24,18 +24,6 @@ public class JarMetricsAnalyzer {
             }
         }
 
-        try (JarFile jarFile = new JarFile(jarFilePath)) {
-            Enumeration<JarEntry> entries = jarFile.entries();
-
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-
-                if (entry.getName().endsWith(".class")) {
-                    collector.processOverriddenMethods(jarFile.getInputStream(entry));
-                }
-            }
-        }
-
         return collector.calculateMetrics();
     }
 }

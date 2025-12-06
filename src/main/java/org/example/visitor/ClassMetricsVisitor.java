@@ -4,6 +4,7 @@ import org.example.model.ClassInfo;
 import org.example.model.MethodInfo;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 import java.io.IOException;
@@ -12,14 +13,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.objectweb.asm.Opcodes.ASM9;
+import static org.objectweb.asm.Opcodes.*;
 
-public class OverriddenMethodsVisitor extends ClassVisitor {
+public class ClassMetricsVisitor extends ClassVisitor {
     private final ClassInfo classInfo;
     private final Map<String, ClassInfo> classInfoMap;
     private int overriddenMethodsCount;
 
-    public OverriddenMethodsVisitor(ClassInfo classInfo, Map<String, ClassInfo> classInfoMap) {
+    public ClassMetricsVisitor(ClassInfo classInfo, Map<String, ClassInfo> classInfoMap) {
         super(ASM9);
         this.classInfo = classInfo;
         this.classInfoMap = classInfoMap;
@@ -27,17 +28,36 @@ public class OverriddenMethodsVisitor extends ClassVisitor {
     }
 
     @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        ClassInfo existingClassInfo = classInfoMap.computeIfAbsent(name, k -> new ClassInfo(name, superName));
+        if (existingClassInfo.getSuperName() == null && superName != null) {
+            classInfoMap.put(name, new ClassInfo(name, superName));
+        }
+
+        super.visit(version, access, name, signature, superName, interfaces);
+    }
+
+    @Override
+    public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+        classInfo.setFieldCount(classInfo.getFieldCount() + 1);
+        return super.visitField(access, name, descriptor, signature, value);
+    }
+
+    @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
             String[] exceptions) {
+        MethodInfo methodInfo = new MethodInfo(name, descriptor);
+        classInfo.addMethod(methodInfo);
+
         if (!name.equals("<init>") && !name.equals("<clinit>")) {
             String methodSignature = name + descriptor;
-
             if (isMethodOverridden(methodSignature, classInfo.getSuperName())) {
                 overriddenMethodsCount++;
             }
         }
 
-        return super.visitMethod(access, name, descriptor, signature, exceptions);
+        MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+        return new AbcMethodVisitor(mv, methodInfo);
     }
 
     private boolean isMethodOverridden(String methodSignature, String superClassName) {
@@ -48,12 +68,10 @@ public class OverriddenMethodsVisitor extends ClassVisitor {
         ClassInfo superClassInfo = classInfoMap.get(superClassName);
 
         if (superClassInfo != null) {
-
             Set<String> superMethodSignatures = getSuperClassMethodSignatures(superClassInfo);
             if (superMethodSignatures.contains(methodSignature)) {
                 return true;
             }
-
             return isMethodOverridden(methodSignature, superClassInfo.getSuperName());
         } else {
             try {

@@ -26,25 +26,11 @@ public class MetricsCollector {
 
         ClassInfo classInfo = classInfoMap.computeIfAbsent(className,
                 k -> new ClassInfo(className, classReader.getSuperName()));
-        classReader.accept(inheritanceVisitor, 0);
 
-        FieldCountVisitor fieldVisitor = new FieldCountVisitor(classInfo);
-        classReader.accept(fieldVisitor, 0);
+        ClassMetricsVisitor metricsVisitor = new ClassMetricsVisitor(classInfo, classInfoMap);
+        classReader.accept(metricsVisitor, 0);
 
-        AbcMetricVisitor abcVisitor = new AbcMetricVisitor(classInfo);
-        classReader.accept(abcVisitor, 0);
-    }
-
-    public void processOverriddenMethods(InputStream classStream) throws IOException {
-        ClassReader classReader = new ClassReader(classStream);
-        String className = classReader.getClassName();
-        ClassInfo classInfo = classInfoMap.get(className);
-
-        if (classInfo != null) {
-            OverriddenMethodsVisitor overriddenVisitor = new OverriddenMethodsVisitor(classInfo, classInfoMap);
-            classReader.accept(overriddenVisitor, 0);
-            classInfo.setOverriddenMethodsCount(overriddenVisitor.getOverriddenMethodsCount());
-        }
+        classInfo.setOverriddenMethodsCount(metricsVisitor.getOverriddenMethodsCount());
     }
 
     public Metrics calculateMetrics() {
